@@ -22,7 +22,7 @@
 
 * CROSS platform
 * output is -- via prefixes, easily -- tracked 
-* if 1 dies & you pass `--kill-others` -> ALL commands are killed 
+* 👀if 1 dies & you pass `--kill-others` -> ALL commands are killed 👀
 
 ## How to install?
 
