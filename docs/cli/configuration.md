@@ -1,11 +1,14 @@
 # Configuration
 
-You might want to configure concurrently to always have certain flags on.
-Any of concurrently's flags can be set via environment variables that are prefixed with `CONCURRENTLY_`.
-
-```bash
-$ export CONCURRENTLY_KILL_OTHERS=true
-$ export CONCURRENTLY_HANDLE_INPUT=true
-# Equivalent to passing --kill-others and --handle-input
-$ concurrently nodemon "echo 'hey nodemon, you won't last long'"
-```
+* allows
+  * 👀enable ALWAYS SOME flags on 👀
+* == -- via -- environment variables /
+  * `CONCURRENTLY_` == prefix 
+  * _Example:_
+    ```bash
+    $ export CONCURRENTLY_KILL_OTHERS=true
+    $ export CONCURRENTLY_HANDLE_INPUT=true
+    
+    $ concurrently nodemon "echo 'hey nodemon, you won't last long'"
+    # ==  $ concurrently --kill-others --handle-input nodemon "echo 'hey nodemon, you won't last long'"
+    ```
