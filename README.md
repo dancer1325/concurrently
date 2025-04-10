@@ -6,149 +6,131 @@
 [![CI Status](https://img.shields.io/github/actions/workflow/status/open-cli-tools/concurrently/test.yml?label=CI&logo=github)](https://github.com/open-cli-tools/concurrently/actions/workflows/test.yml)
 [![Coverage Status](https://img.shields.io/coveralls/github/open-cli-tools/concurrently/main?label=Coverage&logo=coveralls)](https://coveralls.io/github/open-cli-tools/concurrently?branch=main)
 
-Run multiple commands concurrently.
-Like `npm run watch-js & npm run watch-less` but better.
+* allows
+  * run MULTIPLE commands CONCURRENTLY
+* ALTERNATIVES
+  * `npm run watch-js & npm run watch-less`
+    * cons
+      * DIFFICULT -- to track -- DIFFERENT outputs
+  * run ALL commands | DIFFERENT terminals
+    * cons
+      * if 1 process fails & others STILL keep running -> NOT notice the difference 
 
 ![Demo](docs/demo.gif)
 
-**Table of Contents**
+## Features
 
-- [concurrently](#concurrently)
-  - [Why](#why)
-  - [Installation](#installation)
-  - [Usage](#usage)
-  - [API](#api)
-    - [`concurrently(commands[, options])`](#concurrentlycommands-options)
-    - [`Command`](#command)
-    - [`CloseEvent`](#closeevent)
-  - [FAQ](#faq)
+* CROSS platform
+* output is -- via prefixes, easily -- tracked 
+* if 1 dies & you pass `--kill-others` -> ALL commands are killed 
 
-## Why
+## How to install?
 
-I like [task automation with npm](https://web.archive.org/web/20220531064025/https://github.com/substack/blog/blob/master/npm_run.markdown)
-but the usual way to run multiple commands concurrently is
-`npm run watch-js & npm run watch-css`. That's fine but it's hard to keep
-on track of different outputs. Also if one process fails, others still keep running
-and you won't even notice the difference.
-
-Another option would be to just run all commands in separate terminals. I got
-tired of opening terminals and made **concurrently**.
-
-**Features:**
-
-- Cross platform (including Windows)
-- Output is easy to follow with prefixes
-- With `--kill-others` switch, all commands are killed if one dies
-
-## Installation
-
-**concurrently** can be installed in the global scope (if you'd like to have it available and use it on the whole system) or locally for a specific package (for example if you'd like to use it in the `scripts` section of your package):
+* ways
+  * global scope
+  * locally 
+    * == | SPECIFIC package
 
 |             | npm                     | Yarn                           | pnpm                       | Bun                       |
 | ----------- | ----------------------- | ------------------------------ | -------------------------- | ------------------------- |
 | **Global**  | `npm i -g concurrently` | `yarn global add concurrently` | `pnpm add -g concurrently` | `bun add -g concurrently` |
 | **Local**\* | `npm i -D concurrently` | `yarn add -D concurrently`     | `pnpm add -D concurrently` | `bun add -d concurrently` |
 
-<sub>\* It's recommended to add **concurrently** to `devDependencies` as it's usually used for developing purposes. Please adjust the command if this doesn't apply in your case.</sub>
+* recommendations
+  * locally | `devDependencies`
+    * Reason: 🧠it's used -- for -- developing purposes🧠
 
 ## Usage
 
-> **Note**
-> The `concurrently` command is also available under the shorthand alias `conc`.
-
-The tool is written in Node.js, but you can use it to run **any** commands.
-
-Remember to surround separate commands with quotes:
-
-```bash
-concurrently "command1 arg" "command2 arg"
-```
-
-Otherwise **concurrently** would try to run 4 separate commands:
-`command1`, `arg`, `command2`, `arg`.
-
-In package.json, escape quotes:
-
-```bash
-"start": "concurrently \"command1 arg\" \"command2 arg\""
-```
-
-You can always check concurrently's flag list by running `concurrently --help`.
-For the version, run `concurrently --version`.
-
-Check out documentation and other usage examples in the [`docs` directory](./docs/README.md).
+* `conc`
+  * == alias for `concurrently` 
+* ways to run
+  * | bas, `concurrently "command1 arg" "command2 arg" "..."`
+    * 👀ALLOWED ANY commands👀
+    * ⚠️wrap with `""` ⚠️
+      * otherwise -> separate commands
+        ```
+        # 4 commands (!= args): command1, arg, command2, arg 
+        concurrently command1 arg command2 arg
+        ```
+  * | package.json, escape quotes (`\"`)
+    ```bash
+    "start": "concurrently \"command1 arg\" \"command2 arg\""
+    ```
+* [ALLOWED cli commands](./docs/README.md)
 
 ## API
 
-**concurrently** can be used programmatically by using the API documented below:
-
 ### `concurrently(commands[, options])`
 
-- `commands`: an array of either strings (containing the commands to run) or objects
-  with the shape `{ command, name, prefixColor, env, cwd, ipc }`.
-
+* == ⭐️programmatically⭐️ 
+- `commands`
+  - ALLOWED values
+    - `[String]` / `string` == `commandToRun`
+    - `{ command, name, prefixColor, env, cwd, ipc }`
 - `options` (optional): an object containing any of the below:
-  - `cwd`: the working directory to be used by all commands. Can be overriden per command.
-    Default: `process.cwd()`.
-  - `defaultInputTarget`: the default input target when reading from `inputStream`.
-    Default: `0`.
-  - `handleInput`: when `true`, reads input from `process.stdin`.
-  - `inputStream`: a [`Readable` stream](https://nodejs.org/dist/latest-v10.x/docs/api/stream.html#stream_readable_streams)
-    to read the input from. Should only be used in the rare instance you would like to stream anything other than `process.stdin`. Overrides `handleInput`.
-  - `pauseInputStreamOnFinish`: by default, pauses the input stream (`process.stdin` when `handleInput` is enabled, or `inputStream` if provided) when all of the processes have finished. If you need to read from the input stream after `concurrently` has finished, set this to `false`. ([#252](https://github.com/kimmobrunfeldt/concurrently/issues/252)).
-  - `killOthersOn`: once the first command exits with one of these statuses, kill other commands.
-    Can be an array containing the strings `success` (status code zero) and/or `failure` (non-zero exit status).
-  - `maxProcesses`: how many processes should run at once.
-  - `outputStream`: a [`Writable` stream](https://nodejs.org/dist/latest-v10.x/docs/api/stream.html#stream_writable_streams)
-    to write logs to. Default: `process.stdout`.
-  - `prefix`: the prefix type to use when logging processes output.
-    Possible values: `index`, `pid`, `time`, `command`, `name`, `none`, or a template (eg `[{time} process: {pid}]`).
-    Default: the name of the process, or its index if no name is set.
-  - `prefixColors`: a list of colors or a string as supported by [chalk](https://www.npmjs.com/package/chalk) and additional style `auto` for an automatically picked color.
-    If concurrently would run more commands than there are colors, the last color is repeated, unless if the last color value is `auto` which means following colors are automatically picked to vary.
-    Prefix colors specified per-command take precedence over this list.
-  - `prefixLength`: how many characters to show when prefixing with `command`. Default: `10`
-  - `raw`: whether raw mode should be used, meaning strictly process output will
-    be logged, without any prefixes, coloring or extra stuff. Can be overriden per command.
-  - `successCondition`: the condition to consider the run was successful.
-    If `first`, only the first process to exit will make up the success of the run; if `last`, the last process that exits will determine whether the run succeeds.
-    Anything else means all processes should exit successfully.
-  - `restartTries`: how many attempts to restart a process that dies will be made. Default: `0`.
-  - `restartDelay`: how many milliseconds to wait between process restarts. Default: `0`.
-  - `timestampFormat`: a [Unicode format](https://www.unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table)
-    to use when prefixing with `time`. Default: `yyyy-MM-dd HH:mm:ss.ZZZ`
-  - `additionalArguments`: list of additional arguments passed that will get replaced in each command. If not defined, no argument replacing will happen.
+  - OPTIONAL
+  - ALLOWED values
+    - `cwd`: the working directory to be used by all commands. Can be overriden per command.
+      Default: `process.cwd()`.
+    - `defaultInputTarget`: the default input target when reading from `inputStream`.
+      Default: `0`.
+    - `handleInput`: when `true`, reads input from `process.stdin`.
+    - `inputStream`: a [`Readable` stream](https://nodejs.org/dist/latest-v10.x/docs/api/stream.html#stream_readable_streams)
+      to read the input from. Should only be used in the rare instance you would like to stream anything other than `process.stdin`. Overrides `handleInput`.
+    - `pauseInputStreamOnFinish`: by default, pauses the input stream (`process.stdin` when `handleInput` is enabled, or `inputStream` if provided) when all of the processes have finished. If you need to read from the input stream after `concurrently` has finished, set this to `false`. ([#252](https://github.com/kimmobrunfeldt/concurrently/issues/252)).
+    - `killOthersOn`: once the first command exits with one of these statuses, kill other commands.
+      Can be an array containing the strings `success` (status code zero) and/or `failure` (non-zero exit status).
+    - `maxProcesses`: how many processes should run at once.
+    - `outputStream`: a [`Writable` stream](https://nodejs.org/dist/latest-v10.x/docs/api/stream.html#stream_writable_streams)
+      to write logs to. Default: `process.stdout`.
+    - `prefix`: the prefix type to use when logging processes output.
+      Possible values: `index`, `pid`, `time`, `command`, `name`, `none`, or a template (eg `[{time} process: {pid}]`).
+      Default: the name of the process, or its index if no name is set.
+    - `prefixColors`: a list of colors or a string as supported by [chalk](https://www.npmjs.com/package/chalk) and additional style `auto` for an automatically picked color.
+      If concurrently would run more commands than there are colors, the last color is repeated, unless if the last color value is `auto` which means following colors are automatically picked to vary.
+      Prefix colors specified per-command take precedence over this list.
+    - `prefixLength`: how many characters to show when prefixing with `command`. Default: `10`
+    - `raw`: whether raw mode should be used, meaning strictly process output will
+      be logged, without any prefixes, coloring or extra stuff. Can be overriden per command.
+    - `successCondition`: the condition to consider the run was successful.
+      If `first`, only the first process to exit will make up the success of the run; if `last`, the last process that exits will determine whether the run succeeds.
+      Anything else means all processes should exit successfully.
+    - `restartTries`: how many attempts to restart a process that dies will be made. Default: `0`.
+    - `restartDelay`: how many milliseconds to wait between process restarts. Default: `0`.
+    - `timestampFormat`: a [Unicode format](https://www.unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table)
+      to use when prefixing with `time`. Default: `yyyy-MM-dd HH:mm:ss.ZZZ`
+    - `additionalArguments`: list of additional arguments passed that will get replaced in each command. If not defined, no argument replacing will happen.
+* returns `{ result, commands }`
+  * `result` or `rejects` 
+    * if `result` -> `Promise` TODO: that resolves if the run was successful (according to `successCondition` option),
+    * if `rejects` ->  containing an array of [`CloseEvent`](#CloseEvent), in the order that the commands terminated.
+  * `commands`
+    * == [`[CommandS]`](#Command)
 
-> **Returns:** an object in the shape `{ result, commands }`.
->
-> - `result`: a `Promise` that resolves if the run was successful (according to `successCondition` option),
->   or rejects, containing an array of [`CloseEvent`](#CloseEvent), in the order that the commands terminated.
-> - `commands`: an array of all spawned [`Command`s](#Command).
-
-Example:
-
-```js
-const concurrently = require('concurrently');
-const { result } = concurrently(
-  [
-    'npm:watch-*',
-    { command: 'nodemon', name: 'server' },
-    { command: 'deploy', name: 'deploy', env: { PUBLIC_KEY: '...' } },
-    {
-      command: 'watch',
-      name: 'watch',
-      cwd: path.resolve(__dirname, 'scripts/watchers'),
-    },
-  ],
-  {
-    prefix: 'name',
-    killOthers: ['failure', 'success'],
-    restartTries: 3,
-    cwd: path.resolve(__dirname, 'scripts'),
-  },
-);
-result.then(success, failure);
-```
+* _Example:_
+    ```js
+    const concurrently = require('concurrently');
+    const { result } = concurrently(
+      [
+        'npm:watch-*',
+        { command: 'nodemon', name: 'server' },
+        { command: 'deploy', name: 'deploy', env: { PUBLIC_KEY: '...' } },
+        {
+          command: 'watch',
+          name: 'watch',
+          cwd: path.resolve(__dirname, 'scripts/watchers'),
+        },
+      ],
+      {
+        prefix: 'name',
+        killOthers: ['failure', 'success'],
+        restartTries: 3,
+        cwd: path.resolve(__dirname, 'scripts'),
+      },
+    );
+    result.then(success, failure);
+    ```
 
 ### `Command`
 
